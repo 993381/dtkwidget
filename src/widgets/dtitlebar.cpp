@@ -177,7 +177,7 @@ void DSplitScreenButton::initStyleOption(DStyleOptionButton *option) const
         QColor iconForeColor = Qt::white;
         if (DGuiApplicationHelper::instance()->themeType() == DGuiApplicationHelper::LightType) {
             backgroundBrush = DStyle::adjustColor(backgroundBrush, 0, 0, 0, 0, 0, 0, 3);
-            iconForeColor = dpal.textTiele().color();
+            iconForeColor = dpal.brush(DPalette::TextTitle).color();
         }
 
         pal.setBrush(QPalette::Light, backgroundBrush);
@@ -517,8 +517,13 @@ void DTitlebarPrivate::init()
     // 另外，让标题栏接收焦点，还是为了避免一个focus控件隐藏时，会把焦点转移给标题栏上的按钮控件
     q->setFocusPolicy(Qt::StrongFocus);
 
+    auto noTitlebarEnabled = []{
+        QFunctionPointer enableNoTitlebar = qApp->platformFunction("_d_isEnableNoTitlebar");
+        bool enabled = qApp->platformName() == "dwayland" || qApp->property("_d_isDwayland").toBool();
+        return enabled && enableNoTitlebar != nullptr;
+    };
     // fix wayland 下显示了两个应用图标，系统标题栏 和 dtk标题栏 均显示应用图标
-    q->setEmbedMode(!(DApplication::isDXcbPlatform()|| (qApp->platformName() == "dwayland" || qApp->property("_d_isDwayland").toBool())));
+    q->setEmbedMode(!(DApplication::isDXcbPlatform()|| noTitlebarEnabled()));
 }
 
 QWidget *DTitlebarPrivate::targetWindow()
